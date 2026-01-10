@@ -1,0 +1,42 @@
+@import 'tailwindcss';
+
+@font-face {
+	font-family: 'Whole Earth Modern';
+	src: url('/WEMLMRoman8-Regular.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Century Schoolbook Monospace';
+	src: url('/MLMRomanUnsl10-Regular.woff2') format('woff2');
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	background-color: black;
+}
+
+.wrap.s-YR5ielQhmQ15 {
+	margin: 0 !important;
+}
+
+#app {
+	color: white;
+	background-color: black;
+	min-height: 100vh;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+* {
+	box-sizing: border-box;
+	font-family:
+		Whole Earth Modern,
+		'Century Schoolbook Monospace',
+		Courier,
+		monospace;
+}
