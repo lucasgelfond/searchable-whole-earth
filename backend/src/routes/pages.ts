@@ -1,14 +1,9 @@
 import { Hono } from "hono";
 import Turbopuffer from "@turbopuffer/turbopuffer";
-import { env } from "../env";
+import { getEnv } from "../context";
 import { getPresignedUrl } from "../lib/presign";
 
 const NAMESPACE = "searchable-whole-earth-page";
-
-const tpuf = new Turbopuffer({
-	apiKey: env.TURBOPUFFER_API_KEY,
-	region: env.TURBOPUFFER_REGION,
-});
 
 export const pagesRoute = new Hono();
 
@@ -17,6 +12,13 @@ pagesRoute.get("/pages/:issueId", async (c) => {
 	console.log(`GET /pages/${issueId}`);
 
 	try {
+		const env = getEnv();
+
+		const tpuf = new Turbopuffer({
+			apiKey: env.TURBOPUFFER_API_KEY,
+			region: env.TURBOPUFFER_REGION,
+		});
+
 		const ns = tpuf.namespace(NAMESPACE);
 
 		const response = await ns.query({

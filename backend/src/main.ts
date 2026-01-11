@@ -1,19 +1,21 @@
-import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { env } from "./env";
+import type { Env } from "./env";
+import { runWithEnv } from "./context";
 import { searchRoute } from "./routes/search";
 import { healthRoute } from "./routes/health";
 import { pagesRoute } from "./routes/pages";
 
-const app = new Hono();
+const app = new Hono<{ Bindings: Env }>();
 
 app.use("*", cors());
+
+app.use("*", async (c, next) => {
+	return runWithEnv(c.env, () => next());
+});
 
 app.route("/", healthRoute);
 app.route("/", searchRoute);
 app.route("/", pagesRoute);
 
-serve({ fetch: app.fetch, port: env.PORT }, () => {
-	console.log(`Server running at http://localhost:${env.PORT}`);
-});
+export default app;

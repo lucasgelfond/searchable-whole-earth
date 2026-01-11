@@ -1,14 +1,9 @@
 import Turbopuffer from "@turbopuffer/turbopuffer";
-import { env } from "../env";
+import { getEnv } from "../context";
 import { reciprocalRankFusion } from "./reciprocal-rank-fusion";
 import { getPresignedUrl } from "./presign";
 
 const NAMESPACE = "searchable-whole-earth-page";
-
-const tpuf = new Turbopuffer({
-	apiKey: env.TURBOPUFFER_API_KEY,
-	region: env.TURBOPUFFER_REGION,
-});
 
 export interface SearchResult {
 	id: string;
@@ -25,6 +20,13 @@ export async function hybridSearch(
 	embedding: number[],
 	matchCount = 30
 ): Promise<SearchResult[]> {
+	const env = getEnv();
+
+	const tpuf = new Turbopuffer({
+		apiKey: env.TURBOPUFFER_API_KEY,
+		region: env.TURBOPUFFER_REGION,
+	});
+
 	const ns = tpuf.namespace(NAMESPACE);
 
 	const [vectorResponse, bm25Response] = await Promise.all([

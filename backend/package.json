@@ -1,12 +1,12 @@
 {
-	"name": "ts-easy",
+	"name": "searchable-whole-earth-backend",
 	"version": "1.0.0",
 	"description": "",
 	"main": "dist/main.js",
 	"scripts": {
-		"dev": "dotenv -e .env -- tsx --watch ./src/main.ts",
+		"dev": "wrangler dev --port 3000",
 		"build": "tsup --config build.ts",
-		"start": "dotenv -e .env -- node ./dist/main.js",
+		"deploy": "wrangler deploy",
 		"lint": "biome check .",
 		"lint:fix": "biome check . --write",
 		"typecheck": "tsc --noEmit",
@@ -14,18 +14,17 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.4",
+		"@cloudflare/workers-types": "^4.20241230.0",
 		"@types/node": "^18.11.18",
 		"tsup": "^8.1.0",
 		"tsx": "^4.20.6",
-		"typescript": "*"
+		"typescript": "*",
+		"wrangler": "^4.20.0"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.966.0",
 		"@aws-sdk/s3-request-presigner": "^3.966.0",
-		"@hono/node-server": "^1.19.8",
 		"@turbopuffer/turbopuffer": "^1.10.0",
-		"dotenv": "^16.4.5",
-		"dotenv-cli": "^7.4.2",
 		"hono": "^4.11.3",
 		"together-ai": "^0.33.0",
 		"zod": "^3.21.4"

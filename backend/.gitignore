@@ -131,3 +131,7 @@ dist
 
 # database
 .database
+
+
+# wrangler
+.wrangler/
