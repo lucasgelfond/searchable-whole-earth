@@ -1,0 +1,14 @@
+{
+	"name": "searchable-whole-earth",
+	"private": true,
+	"version": "0.0.1",
+	"packageManager": "pnpm@9.10.0",
+	"scripts": {
+		"dev": "pnpm --parallel -r dev",
+		"install:all": "pnpm install",
+		"build": "pnpm --parallel -r build",
+		"lint": "pnpm --parallel -r lint",
+		"lint:fix": "pnpm --parallel -r lint:fix",
+		"format": "pnpm --parallel -r format"
+	}
+}
