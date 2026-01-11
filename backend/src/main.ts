@@ -5,6 +5,7 @@ import { runWithEnv } from "./context";
 import { searchRoute } from "./routes/search";
 import { healthRoute } from "./routes/health";
 import { pagesRoute } from "./routes/pages";
+import { warmNamespaceRoute } from "./routes/warm-namespace";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -34,5 +35,6 @@ app.use("*", async (c, next) => {
 app.route("/", healthRoute);
 app.route("/", searchRoute);
 app.route("/", pagesRoute);
+app.route("/", warmNamespaceRoute);
 
 export default app;

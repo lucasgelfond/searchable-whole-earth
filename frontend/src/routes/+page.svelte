@@ -3,7 +3,7 @@ import { onMount } from 'svelte';
 import Modal from 'svelte-simple-modal';
 import { writable } from 'svelte/store';
 import SearchResults from '../components/SearchResults.svelte';
-import { getIssues, search } from '../utils/api';
+import { getIssues, search, warmNamespace } from '../utils/api';
 
 let input = '';
 let result: any[] = [];
@@ -22,6 +22,7 @@ async function fetchIssues() {
 
 onMount(() => {
 	fetchIssues();
+	warmNamespace();
 });
 
 async function handleSearch(query: string) {

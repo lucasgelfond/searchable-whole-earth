@@ -49,3 +49,20 @@ export async function getIssues(): Promise<Record<string, any>> {
 		{} as Record<string, any>
 	);
 }
+
+export async function warmNamespace(): Promise<void> {
+	try {
+		const response = await fetch(`${API_URL}/warm-namespace`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+
+		if (!response.ok) {
+			console.error("Failed to warm namespace:", response.status, response.statusText);
+		}
+	} catch (error) {
+		console.error("Failed to warm namespace:", error);
+	}
+}
