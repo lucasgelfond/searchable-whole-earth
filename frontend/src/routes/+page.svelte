@@ -1,5 +1,7 @@
 <script lang="ts">
 import { onMount } from 'svelte';
+import { page } from '$app/stores';
+import { goto } from '$app/navigation';
 import Modal from 'svelte-simple-modal';
 import { writable } from 'svelte/store';
 import SearchResults from '../components/SearchResults.svelte';
@@ -23,11 +25,23 @@ async function fetchIssues() {
 onMount(() => {
 	fetchIssues();
 	warmNamespace();
+	const q = $page.url.searchParams.get('search');
+	if (q) {
+		input = q;
+		handleSearch(q);
+	}
 });
 
 async function handleSearch(query: string) {
 	if (loading) return;
 	loading = true;
+	const url = new URL(window.location.href);
+	if (query) {
+		url.searchParams.set('search', query);
+	} else {
+		url.searchParams.delete('search');
+	}
+	goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
 	try {
 		const results = await search(query);
 		result = results;
@@ -109,11 +123,12 @@ function handleKeyPress(event: KeyboardEvent) {
           </div>
         </div>
 
-        <div class="overflow-y-auto pb-8 max-h-[400px] md:pb-40">
+        <div class="overflow-y-auto pb-8 max-h-[500px] md:pb-40">
           <SearchResults
             results={result}
             issueMap={$issueMap}
             {modalStore}
+            query={input}
           />
         </div>
       </div>

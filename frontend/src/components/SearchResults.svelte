@@ -7,6 +7,7 @@ import SearchResult from './SearchResult.svelte';
 export let results: any[] = [];
 export let issueMap: Record<string, any> = {};
 export let modalStore: any;
+export let query: string = '';
 
 // Function to show the result modal
 function showResultModal(item: any) {
@@ -18,11 +19,12 @@ function showResultModal(item: any) {
 {#if results.length}
   <div class="pt-4">
     <h3 class="font-bold pb-3">Search Results:</h3>
-    <div class="grid gap-4 max-w-3xl">
+    <div class="grid gap-4">
       {#each results as item}
-        <SearchResult 
-          {item} 
-          {issueMap} 
+        <SearchResult
+          {item}
+          {issueMap}
+          {query}
           on:select={(event) => showResultModal(event.detail)}
         />
       {/each}

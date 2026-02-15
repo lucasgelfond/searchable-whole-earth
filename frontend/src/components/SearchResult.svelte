@@ -4,6 +4,14 @@ import { collectionMap } from '../utils/collections';
 // Props
 export let item: any;
 export let issueMap: Record<string, any> = {};
+export let query: string = '';
+
+function highlightQuery(text: string): string {
+	if (!query.trim()) return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	const pattern = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	return escaped.replace(new RegExp(`(${pattern})`, 'gi'), '<span class="bg-white text-black">$1</span>');
+}
 
 // Dispatch click event to parent
 import { createEventDispatcher } from 'svelte';
@@ -16,16 +24,16 @@ function handleClick() {
 
 <button 
   type="button"
-  class="text-left border border-white rounded p-4 grid grid-cols-[1fr] min-[350px]:grid-cols-[80px_1fr] md:grid-cols-[100px_220px_1fr] gap-3 md:gap-4 cursor-pointer hover:bg-gray-800 w-full text-white bg-black"
+  class="text-left border border-white rounded p-4 grid grid-cols-[1fr] min-[350px]:grid-cols-[100px_1fr] md:grid-cols-[140px_200px_1fr] gap-3 md:gap-3 cursor-pointer hover:bg-gray-800 w-full text-white bg-black"
   on:click={handleClick}
 >
   <!-- Image column - only show above 350px width -->
-  <div class="hidden min-[350px]:block w-[80px] md:w-[100px] self-start">
+  <div class="hidden min-[350px]:block w-[100px] md:w-[140px] self-start">
     {#if item.image_url}
-      <img 
-        src={item.image_url} 
-        alt="Page preview" 
-        class="w-full h-auto max-h-[100px] md:max-h-[150px] object-contain" 
+      <img
+        src={item.image_url}
+        alt="Page preview"
+        class="w-full h-auto max-h-[200px] object-contain"
       />
     {/if}
   </div>
@@ -59,8 +67,8 @@ function handleClick() {
       </div>
     {/if}
     <!-- OCR content for mobile - always show even without issue metadata -->
-    <div class="pt-1 text-xs h-[60px] overflow-y-auto text-white">
-      {item.ocr_result || 'No text available'}
+    <div class="pt-1 text-xs h-[100px] overflow-y-auto text-white">
+      {@html highlightQuery(item.ocr_result || 'No text available')}
     </div>
   </div>
   
@@ -102,7 +110,7 @@ function handleClick() {
   </div>
   
   <!-- Desktop only: OCR content column -->
-  <div class="hidden md:block h-[150px] overflow-y-auto text-sm text-white">
-    {item.ocr_result || 'No text available'}
+  <div class="hidden md:block h-[200px] overflow-y-auto text-sm text-white">
+    {@html highlightQuery(item.ocr_result || 'No text available')}
   </div>
 </button>
