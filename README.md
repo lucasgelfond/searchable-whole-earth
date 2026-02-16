@@ -1,3 +1,7 @@
+Try the demo out at [https://searchwhole.earth](https://searchwhole.earth)
+
+![Demo](frontend/static/werdemo.gif)
+
 Welcome to the source! This repo is broken up into three folders
 - `backend/` which is a light server that embeds queries (with Together.ai) and makes calls out to Turbopuffer, which I use for the db here
 - `frontend/` which is a Svelte client / interface for search and navigation around the issues.
