@@ -11,9 +11,6 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
-      svelte-simple-modal:
-        specifier: ^2.0.0
-        version: 2.0.0(svelte@5.22.6)
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.9.4
@@ -1317,11 +1314,6 @@ packages:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: '>=5.0.0'
 
-  svelte-simple-modal@2.0.0:
-    resolution: {integrity: sha512-Rm7MnyL5lsTpai1aRtdq2Gku1VxrGYu1R//ygV3HIdzK1EuJeU6r+fAKc8sq8GMvL0wukaa9mnwBlrcoc2tXzg==}
-    peerDependencies:
-      svelte: ^5.0.0
-
   svelte@5.22.6:
     resolution: {integrity: sha512-dxHyh3USJyayafSt5I5QD7KuoCM5ZGdIOtLQiKHEro7tymdh0jMcNkiSBVHW+LOA2jEqZEHhyfwN6/pCjx0Fug==}
     engines: {node: '>=18'}
@@ -2432,10 +2424,6 @@ snapshots:
       typescript: 5.8.2
     transitivePeerDependencies:
       - picomatch
-
-  svelte-simple-modal@2.0.0(svelte@5.22.6):
-    dependencies:
-      svelte: 5.22.6
 
   svelte@5.22.6:
     dependencies:
