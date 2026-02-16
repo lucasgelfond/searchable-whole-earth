@@ -2,11 +2,10 @@
 import type { PageData, PageMap } from '$lib/page-utils';
 import { fetchAllPages } from '$lib/page-utils';
 import { onMount, onDestroy } from 'svelte';
-import { goto } from '$app/navigation';
 import { writable } from 'svelte/store';
 import { collectionMap } from '../utils/collections';
 import IssueInformation from './IssueInformation.svelte';
-import { highlightQuery, searchQuery, isFullScreen } from '$lib';
+import { highlightQuery, searchQuery, isFullScreen, updateUrlParams } from '$lib';
 import { getIssues } from '../utils/api';
 
 // Accept either pre-loaded data (click flow) or just IDs (URL flow)
@@ -22,19 +21,19 @@ isFullScreen.set(fullScreen);
 function toggleFullScreen() {
 	fullScreen = !fullScreen;
 	isFullScreen.set(fullScreen);
-
-	const url = new URL(window.location.href);
-	if (fullScreen) {
-		url.searchParams.set('fullscreen', '1');
-	} else {
-		url.searchParams.delete('fullscreen');
-	}
-	goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
+	updateUrlParams({ fullscreen: fullScreen ? '1' : null });
 }
 
 const currentPageNumber = writable(Number(item?.page_number || initialPageNumber) || 1);
 const allPages = writable<PageMap>({});
 const loading = writable(false);
+
+let imageLoaded = false;
+
+$: {
+	$currentPageNumber;
+	imageLoaded = false;
+}
 
 const preloadedPages = new Set<number>();
 
@@ -64,21 +63,16 @@ async function loadAllPages() {
 	}
 }
 
-function changePage(newPageNumber: number) {
+function changePage(pageNum: number) {
 	if ($loading || !issue) return;
-	const pageNum = Number(newPageNumber);
 	if (pageNum < 1 || pageNum > issue.num_pages) return;
 	if (!$allPages[pageNum]) return;
 
 	currentPageNumber.set(pageNum);
 	preloadNearbyImages($allPages, pageNum);
-
-	const url = new URL(window.location.href);
-	url.searchParams.set('page', String(pageNum));
-	goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
+	updateUrlParams({ page: String(pageNum) });
 }
 
-// Handle keyboard and touch navigation
 function handleKeydown(event: KeyboardEvent) {
 	if (event.key === 'Escape' && fullScreen) {
 		toggleFullScreen();
@@ -93,30 +87,25 @@ function handleKeydown(event: KeyboardEvent) {
 	}
 }
 
-let touchStart: number;
+let touchStartX: number;
+
 function handleTouchStart(event: TouchEvent) {
-	touchStart = event.touches[0].clientX;
+	touchStartX = event.touches[0].clientX;
 }
 
 function handleTouchEnd(event: TouchEvent) {
 	if (!issue) return;
-	const touchEnd = event.changedTouches[0].clientX;
-	const diff = touchStart - touchEnd;
+	const diff = touchStartX - event.changedTouches[0].clientX;
+	if (Math.abs(diff) < 50) return;
 
-	if (Math.abs(diff) > 50) {
-		// Minimum swipe distance
-		if (diff > 0 && $currentPageNumber < issue.num_pages) {
-			changePage($currentPageNumber + 1);
-		} else if (diff < 0 && $currentPageNumber > 1) {
-			changePage($currentPageNumber - 1);
-		}
+	if (diff > 0 && $currentPageNumber < issue.num_pages) {
+		changePage($currentPageNumber + 1);
+	} else if (diff < 0 && $currentPageNumber > 1) {
+		changePage($currentPageNumber - 1);
 	}
 }
 
-let cleanup: () => void;
-
 onMount(async () => {
-	// If opened from URL params without pre-loaded data, fetch issue
 	if (!issue && issueId) {
 		const issues = await getIssues();
 		issue = issues[issueId];
@@ -126,14 +115,15 @@ onMount(async () => {
 		allPages.set({ [item.page_number]: item });
 	}
 
-	// Use capture phase so Escape for fullscreen fires before modal close handler
+	// Capture phase so Escape for fullscreen fires before modal close handler
 	window.addEventListener('keydown', handleKeydown, true);
-	cleanup = () => window.removeEventListener('keydown', handleKeydown, true);
 	loadAllPages();
-	return cleanup;
 });
 
 onDestroy(() => {
+	if (typeof window !== 'undefined') {
+		window.removeEventListener('keydown', handleKeydown, true);
+	}
 	isFullScreen.set(false);
 });
 </script>
@@ -148,12 +138,20 @@ onDestroy(() => {
     <img
       src={$allPages[$currentPageNumber].image_url}
       alt="Page {$currentPageNumber}"
-      class="max-h-full max-w-full object-contain"
+      class="max-h-full max-w-full object-contain transition-opacity duration-150"
+      class:opacity-0={!imageLoaded}
+      on:load={() => imageLoaded = true}
     />
+  {/if}
+  {#if !imageLoaded}
+    <div class="absolute inset-0 flex items-center justify-center">
+      <span class="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+    </div>
   {/if}
 
   <div class="absolute inset-y-0 left-0 right-0 flex justify-between items-center pointer-events-none">
     <button
+      aria-label="Previous page"
       class="pointer-events-auto bg-black/70 text-white p-4 hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
       disabled={$currentPageNumber <= 1 || $loading || !$allPages[$currentPageNumber - 1]}
       on:click={() => changePage($currentPageNumber - 1)}
@@ -161,6 +159,7 @@ onDestroy(() => {
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
     <button
+      aria-label="Next page"
       class="pointer-events-auto bg-black/70 text-white p-4 hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
       disabled={!issue || $currentPageNumber >= issue.num_pages || $loading || !$allPages[$currentPageNumber + 1]}
       on:click={() => changePage($currentPageNumber + 1)}
@@ -170,6 +169,7 @@ onDestroy(() => {
   </div>
 
   <button
+    aria-label="Exit fullscreen"
     class="absolute top-4 right-4 bg-black/70 text-white p-2 hover:bg-black/90 flex items-center justify-center"
     on:click={toggleFullScreen}
   >
@@ -197,12 +197,20 @@ onDestroy(() => {
       <img
         src={$allPages[$currentPageNumber].image_url}
         alt="Page {$currentPageNumber}"
-        class="max-h-full max-w-full object-contain"
+        class="max-h-full max-w-full object-contain transition-opacity duration-150"
+        class:opacity-0={!imageLoaded}
+        on:load={() => imageLoaded = true}
       />
+    {/if}
+    {#if !imageLoaded}
+      <div class="absolute inset-0 flex items-center justify-center">
+        <span class="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+      </div>
     {/if}
 
     <div class="absolute inset-y-0 left-0 right-0 flex justify-between items-center pointer-events-none px-2">
       <button
+        aria-label="Previous page"
         class="pointer-events-auto bg-black/70 text-white p-4 hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
         disabled={$currentPageNumber <= 1 || $loading || !$allPages[$currentPageNumber - 1]}
         on:click={() => changePage($currentPageNumber - 1)}
@@ -210,6 +218,7 @@ onDestroy(() => {
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
       </button>
       <button
+        aria-label="Next page"
         class="pointer-events-auto bg-black/70 text-white p-4 hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
         disabled={$currentPageNumber >= issue.num_pages || $loading || !$allPages[$currentPageNumber + 1]}
         on:click={() => changePage($currentPageNumber + 1)}
@@ -219,6 +228,7 @@ onDestroy(() => {
     </div>
 
     <button
+      aria-label="Enter fullscreen"
       class="absolute top-4 right-4 bg-black/70 text-white p-2 hover:bg-black/90 flex items-center justify-center"
       on:click={toggleFullScreen}
     >
@@ -227,7 +237,7 @@ onDestroy(() => {
   </div>
 
   <!-- Content column -->
-  <div class="w-[500px] flex-none flex flex-col p-6 border-l border-white/20">
+  <div class="w-[300px] lg:w-[500px] flex-none flex flex-col p-6 border-l border-white/20">
     <div class="flex-none">
       <IssueInformation
         {issue}
@@ -236,7 +246,7 @@ onDestroy(() => {
       />
     </div>
 
-    <div class="flex-1 overflow-y-auto mt-6 h-full">
+    <div class="flex-1 overflow-y-auto mt-6 min-h-0">
       <div class="text-lg leading-relaxed">
         {@html highlightQuery($allPages[$currentPageNumber]?.ocr_result || '', $searchQuery)}
       </div>
@@ -246,7 +256,7 @@ onDestroy(() => {
 <!-- Mobile Layout -->
 <div class="md:hidden flex flex-col h-full bg-black text-white">
   <div
-    class="flex-none relative max-h-[35vh]"
+    class="flex-none relative h-[35vh]"
     on:touchstart={handleTouchStart}
     on:touchend={handleTouchEnd}
   >
@@ -254,39 +264,49 @@ onDestroy(() => {
       <img
         src={$allPages[$currentPageNumber].image_url}
         alt="Page {$currentPageNumber}"
-        class="w-full h-full object-contain"
+        class="w-full h-full object-contain transition-opacity duration-150"
+        class:opacity-0={!imageLoaded}
+        on:load={() => imageLoaded = true}
       />
-
-      <div class="absolute inset-y-0 left-0 flex items-center">
-        <button
-          class="bg-black/70 text-white p-2 rounded-r-lg hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
-          disabled={$currentPageNumber <= 1 || $loading || !$allPages[$currentPageNumber - 1]}
-          on:click={() => changePage($currentPageNumber - 1)}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
-      </div>
-
-      <div class="absolute inset-y-0 right-0 flex items-center">
-        <button
-          class="bg-black/70 text-white p-2 rounded-l-lg hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
-          disabled={$currentPageNumber >= issue.num_pages || $loading || !$allPages[$currentPageNumber + 1]}
-          on:click={() => changePage($currentPageNumber + 1)}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </button>
-      </div>
-
-      <button
-        class="absolute top-2 right-2 bg-black/70 text-white p-2 hover:bg-black/90 flex items-center justify-center"
-        on:click={toggleFullScreen}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
-      </button>
     {/if}
+    {#if !imageLoaded}
+      <div class="absolute inset-0 flex items-center justify-center">
+        <span class="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+      </div>
+    {/if}
+
+    <div class="absolute inset-y-0 left-0 flex items-center">
+      <button
+        aria-label="Previous page"
+        class="bg-black/70 text-white p-2 rounded-r-lg hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+        disabled={$currentPageNumber <= 1 || $loading || !$allPages[$currentPageNumber - 1]}
+        on:click={() => changePage($currentPageNumber - 1)}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+    </div>
+
+    <div class="absolute inset-y-0 right-0 flex items-center">
+      <button
+        aria-label="Next page"
+        class="bg-black/70 text-white p-2 rounded-l-lg hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+        disabled={$currentPageNumber >= issue.num_pages || $loading || !$allPages[$currentPageNumber + 1]}
+        on:click={() => changePage($currentPageNumber + 1)}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+
+    <button
+      aria-label="Enter fullscreen"
+      class="absolute top-3 right-12 bg-black/70 text-white p-2 rounded-sm hover:bg-black/90 flex items-center justify-center"
+      on:click={toggleFullScreen}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+    </button>
   </div>
 
-  <div class="p-4 flex-none border-b">
+  <div class="p-4 flex-none border-b border-white/20">
     <div class="text-lg font-bold">{collectionMap[issue.collection]}</div>
     <div class="text-white/90">{issue.pub_date}</div>
     <div class="mt-2 flex justify-between items-center">
@@ -300,7 +320,7 @@ onDestroy(() => {
   </div>
 
   <div class="flex-1 overflow-y-auto p-4 min-h-0">
-    <div class="text-base h-full">
+    <div class="text-base">
       {@html highlightQuery($allPages[$currentPageNumber]?.ocr_result || '', $searchQuery)}
     </div>
   </div>

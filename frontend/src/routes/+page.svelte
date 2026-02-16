@@ -2,14 +2,12 @@
 import { onMount } from 'svelte';
 import { fade } from 'svelte/transition';
 import { page } from '$app/stores';
-import { goto } from '$app/navigation';
 import SearchResults from '../components/SearchResults.svelte';
 import ResultModal from '../components/ResultModal.svelte';
-import { searchQuery, isFullScreen } from '$lib';
+import { searchQuery, isFullScreen, updateUrlParams } from '$lib';
 import { writable } from 'svelte/store';
 import { getIssues, search, warmNamespace } from '../utils/api';
 
-// Read URL params synchronously so initial render reflects them
 const urlIssueId = $page.url.searchParams.get('issue');
 const urlPageNum = $page.url.searchParams.get('page');
 const urlFullScreen = $page.url.searchParams.get('fullscreen') === '1';
@@ -19,12 +17,10 @@ let result: any[] = [];
 let loading = false;
 const issueMap = writable<Record<string, any>>({});
 
-// Modal state: null = closed, object = open with these props
 let modalProps: Record<string, any> | null = null;
 
 searchQuery.set(input);
 
-// If URL has modal params, open immediately — no animation, no library, just DOM
 if (urlIssueId && urlPageNum) {
 	modalProps = {
 		issueId: urlIssueId,
@@ -43,20 +39,13 @@ async function fetchIssues() {
 }
 
 function openModal(item: any, issue: any) {
-	const url = new URL(window.location.href);
-	url.searchParams.set('issue', issue.id);
-	url.searchParams.set('page', String(item.page_number));
-	goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
+	updateUrlParams({ issue: issue.id, page: String(item.page_number) });
 	modalProps = { item, issue };
 }
 
 function handleModalClose() {
 	if ($isFullScreen) return;
-	const url = new URL(window.location.href);
-	url.searchParams.delete('issue');
-	url.searchParams.delete('page');
-	url.searchParams.delete('fullscreen');
-	goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
+	updateUrlParams({ issue: null, page: null, fullscreen: null });
 	modalProps = null;
 }
 
@@ -70,13 +59,7 @@ async function handleSearch(query: string) {
 	if (loading) return;
 	loading = true;
 	searchQuery.set(query);
-	const url = new URL(window.location.href);
-	if (query) {
-		url.searchParams.set('search', query);
-	} else {
-		url.searchParams.delete('search');
-	}
-	goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
+	updateUrlParams({ search: query || null });
 	try {
 		const results = await search(query);
 		result = results;
@@ -143,19 +126,18 @@ function handleKeyPress(event: KeyboardEvent) {
 </div>
 
 {#if modalProps}
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
   <div
     transition:fade={{ duration: 150 }}
-    class="fixed inset-0 z-50 flex items-center justify-center"
-    style="background-color: rgba(0, 0, 0, 0.5)"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
     on:click|self={handleModalClose}
   >
     <div
-      class="relative bg-black border border-white rounded-lg overflow-hidden"
-      style="width: 90vw; height: 90vh; max-width: none;"
+      class="relative bg-black border border-white rounded-lg overflow-hidden w-[90vw] h-[90vh] max-w-none"
     >
       <button
-        class="absolute top-4 right-4 z-10 text-white bg-transparent border-none opacity-100 text-2xl w-6 h-6 flex items-center justify-center cursor-pointer hover:opacity-70"
+        aria-label="Close modal"
+        class="absolute top-3 right-3 z-10 text-white bg-black/70 rounded-sm text-xl w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-black/90"
         on:click={handleModalClose}
       >×</button>
       <ResultModal {...modalProps} />
