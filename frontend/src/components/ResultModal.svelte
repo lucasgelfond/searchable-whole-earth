@@ -1,12 +1,12 @@
 <script lang="ts">
 import type { PageData, PageMap } from '$lib/page-utils';
 import { fetchAllPages } from '$lib/page-utils';
-import { onMount } from 'svelte';
+import { onMount, onDestroy } from 'svelte';
 import { goto } from '$app/navigation';
 import { writable } from 'svelte/store';
 import { collectionMap } from '../utils/collections';
 import IssueInformation from './IssueInformation.svelte';
-import { highlightQuery, searchQuery } from '$lib';
+import { highlightQuery, searchQuery, isFullScreen } from '$lib';
 import { getIssues } from '../utils/api';
 
 // Accept either pre-loaded data (click flow) or just IDs (URL flow)
@@ -14,6 +14,23 @@ export let item: PageData | null = null;
 export let issue: any = null;
 export let issueId: string = '';
 export let initialPageNumber: number = 0;
+export let initialFullScreen: boolean = false;
+
+let fullScreen = initialFullScreen;
+isFullScreen.set(fullScreen);
+
+function toggleFullScreen() {
+	fullScreen = !fullScreen;
+	isFullScreen.set(fullScreen);
+
+	const url = new URL(window.location.href);
+	if (fullScreen) {
+		url.searchParams.set('fullscreen', '1');
+	} else {
+		url.searchParams.delete('fullscreen');
+	}
+	goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
+}
 
 const currentPageNumber = writable(Number(item?.page_number || initialPageNumber) || 1);
 const allPages = writable<PageMap>({});
@@ -63,6 +80,11 @@ function changePage(newPageNumber: number) {
 
 // Handle keyboard and touch navigation
 function handleKeydown(event: KeyboardEvent) {
+	if (event.key === 'Escape' && fullScreen) {
+		toggleFullScreen();
+		event.stopImmediatePropagation();
+		return;
+	}
 	if (!issue) return;
 	if (event.key === 'ArrowLeft' && $currentPageNumber > 1) {
 		changePage($currentPageNumber - 1);
@@ -104,16 +126,68 @@ onMount(async () => {
 		allPages.set({ [item.page_number]: item });
 	}
 
-	window.addEventListener('keydown', handleKeydown);
-	cleanup = () => window.removeEventListener('keydown', handleKeydown);
+	// Use capture phase so Escape for fullscreen fires before modal close handler
+	window.addEventListener('keydown', handleKeydown, true);
+	cleanup = () => window.removeEventListener('keydown', handleKeydown, true);
 	loadAllPages();
 	return cleanup;
 });
+
+onDestroy(() => {
+	isFullScreen.set(false);
+});
 </script>
+
+{#if fullScreen}
+<div
+  class="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+  on:touchstart={handleTouchStart}
+  on:touchend={handleTouchEnd}
+>
+  {#if $allPages[$currentPageNumber]?.image_url}
+    <img
+      src={$allPages[$currentPageNumber].image_url}
+      alt="Page {$currentPageNumber}"
+      class="max-h-full max-w-full object-contain"
+    />
+  {/if}
+
+  <div class="absolute inset-y-0 left-0 right-0 flex justify-between items-center pointer-events-none">
+    <button
+      class="pointer-events-auto bg-black/70 text-white p-4 hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+      disabled={$currentPageNumber <= 1 || $loading || !$allPages[$currentPageNumber - 1]}
+      on:click={() => changePage($currentPageNumber - 1)}
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <button
+      class="pointer-events-auto bg-black/70 text-white p-4 hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+      disabled={!issue || $currentPageNumber >= issue.num_pages || $loading || !$allPages[$currentPageNumber + 1]}
+      on:click={() => changePage($currentPageNumber + 1)}
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </button>
+  </div>
+
+  <button
+    class="absolute top-4 right-4 bg-black/70 text-white p-2 hover:bg-black/90 flex items-center justify-center"
+    on:click={toggleFullScreen}
+  >
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+  </button>
+
+  {#if issue}
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-3 py-1 text-sm">
+      Page {$currentPageNumber} of {issue.num_pages}
+    </div>
+  {/if}
+</div>
+{/if}
+
 {#if issue}
 <!-- Desktop Layout -->
-<div class="hidden md:flex bg-black text-white">
-  <!-- Image column - flexible width to accommodate full-width image -->
+<div class="hidden md:flex bg-black text-white h-full">
+  <!-- Image column -->
   <div class="flex-1 overflow-y-auto">
     <div
       class="relative inline-block"
@@ -143,11 +217,18 @@ onMount(async () => {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </button>
         </div>
+
+        <button
+          class="absolute top-2 right-2 bg-black/70 text-white p-2 hover:bg-black/90 flex items-center justify-center"
+          on:click={toggleFullScreen}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+        </button>
       {/if}
     </div>
   </div>
 
-  <!-- Content column - fixed width for readability -->
+  <!-- Content column -->
   <div class="w-[500px] flex-none flex flex-col p-6 border-l border-white/20">
     <div class="flex-none">
       <IssueInformation
@@ -197,6 +278,13 @@ onMount(async () => {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
       </div>
+
+      <button
+        class="absolute top-2 right-2 bg-black/70 text-white p-2 hover:bg-black/90 flex items-center justify-center"
+        on:click={toggleFullScreen}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+      </button>
     {/if}
   </div>
 

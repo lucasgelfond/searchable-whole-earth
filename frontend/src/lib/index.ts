@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 
 export const searchQuery = writable('');
+export const isFullScreen = writable(false);
 
 export function highlightQuery(text: string, query: string): string {
 	const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
