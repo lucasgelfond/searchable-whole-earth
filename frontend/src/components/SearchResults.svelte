@@ -1,18 +1,16 @@
 <script lang="ts">
-import { bind } from 'svelte-simple-modal';
-import ResultModal from './ResultModal.svelte';
 import SearchResult from './SearchResult.svelte';
 
 // Props
 export let results: any[] = [];
 export let issueMap: Record<string, any> = {};
-export let modalStore: any;
+export let openModal: (item: any, issue: any) => void;
 export let query: string = '';
 
 // Function to show the result modal
 function showResultModal(item: any) {
 	const issue = issueMap[item.parent_issue_id];
-	modalStore.set(bind(ResultModal, { item, issue }));
+	openModal(item, issue);
 }
 </script>
 

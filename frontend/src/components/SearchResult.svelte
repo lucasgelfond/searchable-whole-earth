@@ -1,17 +1,11 @@
 <script lang="ts">
 import { collectionMap } from '../utils/collections';
+import { highlightQuery } from '$lib';
 
 // Props
 export let item: any;
 export let issueMap: Record<string, any> = {};
 export let query: string = '';
-
-function highlightQuery(text: string): string {
-	if (!query.trim()) return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-	const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-	const pattern = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-	return escaped.replace(new RegExp(`(${pattern})`, 'gi'), '<span class="bg-white text-black">$1</span>');
-}
 
 // Dispatch click event to parent
 import { createEventDispatcher } from 'svelte';
@@ -68,7 +62,7 @@ function handleClick() {
     {/if}
     <!-- OCR content for mobile - always show even without issue metadata -->
     <div class="pt-1 text-xs h-[100px] overflow-y-auto text-white">
-      {@html highlightQuery(item.ocr_result || 'No text available')}
+      {@html highlightQuery(item.ocr_result || 'No text available', query)}
     </div>
   </div>
   
@@ -111,6 +105,6 @@ function handleClick() {
   
   <!-- Desktop only: OCR content column -->
   <div class="hidden md:block h-[200px] overflow-y-auto text-sm text-white">
-    {@html highlightQuery(item.ocr_result || 'No text available')}
+    {@html highlightQuery(item.ocr_result || 'No text available', query)}
   </div>
 </button>

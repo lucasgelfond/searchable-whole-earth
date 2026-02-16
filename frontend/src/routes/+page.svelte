@@ -3,15 +3,35 @@ import { onMount } from 'svelte';
 import { page } from '$app/stores';
 import { goto } from '$app/navigation';
 import Modal from 'svelte-simple-modal';
+import { bind } from 'svelte-simple-modal';
 import { writable } from 'svelte/store';
 import SearchResults from '../components/SearchResults.svelte';
+import ResultModal from '../components/ResultModal.svelte';
+import { searchQuery } from '$lib';
 import { getIssues, search, warmNamespace } from '../utils/api';
 
-let input = '';
+// Read URL params synchronously so initial render reflects them
+const urlIssueId = $page.url.searchParams.get('issue');
+const urlPageNum = $page.url.searchParams.get('page');
+
+let input = $page.url.searchParams.get('search') || '';
 let result: any[] = [];
 let loading = false;
+let transitionDuration = 250;
 const issueMap = writable<Record<string, any>>({});
 const modalStore = writable(null);
+
+// Set the shared search query store
+searchQuery.set(input);
+
+// If URL has modal params, open immediately with no animation
+if (urlIssueId && urlPageNum) {
+	transitionDuration = 0;
+	modalStore.set(bind(ResultModal, {
+		issueId: urlIssueId,
+		initialPageNumber: Number(urlPageNum)
+	}));
+}
 
 async function fetchIssues() {
 	try {
@@ -22,19 +42,34 @@ async function fetchIssues() {
 	}
 }
 
+function openModal(item: any, issue: any) {
+	const url = new URL(window.location.href);
+	url.searchParams.set('issue', issue.id);
+	url.searchParams.set('page', String(item.page_number));
+	goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
+	modalStore.set(bind(ResultModal, { item, issue }));
+}
+
+function handleModalClose() {
+	const url = new URL(window.location.href);
+	url.searchParams.delete('issue');
+	url.searchParams.delete('page');
+	goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
+	modalStore.set(null);
+}
+
 onMount(() => {
+	// Restore normal transition duration after initial render
+	transitionDuration = 250;
 	fetchIssues();
 	warmNamespace();
-	const q = $page.url.searchParams.get('search');
-	if (q) {
-		input = q;
-		handleSearch(q);
-	}
+	if (input) handleSearch(input);
 });
 
 async function handleSearch(query: string) {
 	if (loading) return;
 	loading = true;
+	searchQuery.set(query);
 	const url = new URL(window.location.href);
 	if (query) {
 		url.searchParams.set('search', query);
@@ -58,16 +93,19 @@ function handleKeyPress(event: KeyboardEvent) {
 	}
 }
 </script>
-<Modal 
+<Modal
   show={$modalStore}
+  on:closed={handleModalClose}
+  transitionBgProps={{ duration: transitionDuration }}
+  transitionWindowProps={{ duration: transitionDuration }}
   styleWindow={{ width: '90vw', height: '80vh', maxWidth: 'none', marginBottom: '15vh', backgroundColor: 'black', color: 'white', border: '1px solid white', borderRadius: '0.5rem', overflow: 'hidden' }}
   styleContent={{ height: '100%' }}
   styleBg={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-  styleCloseButton={{ 
+  styleCloseButton={{
     color: 'white',
     backgroundColor: 'transparent',
     border: 'none',
-    opacity: '1', 
+    opacity: '1',
     fontSize: '24px',
     position: 'absolute',
     top: '1rem',
@@ -100,7 +138,7 @@ function handleKeyPress(event: KeyboardEvent) {
 
         <div class="flex gap-2">
           <div class="py-2">
-            <input 
+            <input
               type="text"
               class="border border-white rounded px-2 py-1 bg-black text-white"
               placeholder="Enter text to search..."
@@ -108,7 +146,7 @@ function handleKeyPress(event: KeyboardEvent) {
               on:keypress={handleKeyPress}
               disabled={loading}
             />
-            <button 
+            <button
               class="border border-white text-white px-4 py-1 rounded hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               on:click={() => handleSearch(input)}
               disabled={loading}
@@ -127,7 +165,7 @@ function handleKeyPress(event: KeyboardEvent) {
           <SearchResults
             results={result}
             issueMap={$issueMap}
-            {modalStore}
+            {openModal}
             query={input}
           />
         </div>
