@@ -22,12 +22,12 @@ function handleClick() {
   on:click={handleClick}
 >
   <!-- Image column - only show above 350px width -->
-  <div class="hidden min-[350px]:block w-[100px] md:w-[140px] self-start">
+  <div class="hidden min-[350px]:flex w-[100px] md:w-[140px] h-[140px] md:h-[200px] self-start items-center justify-center overflow-hidden">
     {#if item.image_url}
       <img
         src={item.image_url}
         alt="Page preview"
-        class="w-full h-auto max-h-[200px] object-contain"
+        class="h-full w-auto"
       />
     {/if}
   </div>
