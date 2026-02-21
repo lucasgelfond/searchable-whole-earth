@@ -93,7 +93,7 @@ function handleKeyPress(event: KeyboardEvent) {
 
 <div class="flex flex-col h-screen overflow-hidden text-black dark:text-white bg-white dark:bg-black">
   <div class="flex-none px-4 md:px-20 pt-8 md:pt-12 pb-4">
-    <div class="flex justify-between items-start">
+    <div class="flex justify-between items-center">
       <h1 class="text-4xl md:text-5xl font-bold mb-6 text-black dark:text-white">
         The (Searchable) Whole Earth
       </h1>
