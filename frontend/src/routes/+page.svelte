@@ -154,9 +154,9 @@ function handleKeyPress(event: KeyboardEvent) {
     >
       <button
         aria-label="Close modal"
-        class="absolute top-3 right-3 z-10 text-black dark:text-white bg-white dark:bg-black border border-black dark:border-white rounded text-xl w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
+        class="absolute top-3 right-3 z-10 text-black dark:text-white w-8 h-8 flex items-center justify-center cursor-pointer opacity-50 hover:opacity-100 transition-opacity"
         on:click={handleModalClose}
-      >×</button>
+      ><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       <ResultModal {...modalProps} />
     </div>
   </div>
