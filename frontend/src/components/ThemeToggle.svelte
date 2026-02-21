@@ -33,12 +33,23 @@
 		'000000011111111111111111111111000000',
 	];
 
-	// Circle mask computed with half-pixel center for perfect even-grid symmetry
+	// Circle mask with half-pixel center for perfect even-grid symmetry
 	const circleMask: boolean[][] = Array.from({ length: SIZE }, (_, y) =>
 		Array.from({ length: SIZE }, (_, x) => {
 			const dx = x - CENTER;
 			const dy = y - CENTER;
 			return dx * dx + dy * dy <= R_SQ;
+		})
+	);
+
+	// Outline: circle pixels with at least one non-circle neighbor
+	const outlineMask: boolean[][] = Array.from({ length: SIZE }, (_, y) =>
+		Array.from({ length: SIZE }, (_, x) => {
+			if (!circleMask[y][x]) return false;
+			return (
+				!circleMask[y]?.[x - 1] || !circleMask[y]?.[x + 1] ||
+				!circleMask[y - 1]?.[x] || !circleMask[y + 1]?.[x]
+			);
 		})
 	);
 
@@ -70,6 +81,14 @@
 			for (let x = 0; x < SIZE; x++) {
 				if (!circleMask[y][x]) continue;
 
+				// Outline pixels: always fg so the sphere boundary is visible
+				if (outlineMask[y][x]) {
+					ctx.fillStyle = fg;
+					ctx.fillRect(x, y, 1, 1);
+					continue;
+				}
+
+				// Interior pixels: project onto sphere
 				const dx = x - CENTER;
 				const dy = y - CENTER;
 				const dz = Math.sqrt(Math.max(0, R_SQ - dx * dx - dy * dy));
@@ -118,6 +137,7 @@
 		cursor: pointer;
 		line-height: 0;
 		flex-shrink: 0;
+		align-self: start;
 	}
 
 	.earth-canvas {
