@@ -106,30 +106,32 @@ function handleKeyPress(event: KeyboardEvent) {
       Based on the (incredible) archiving effort of the <a href="https://wholeearth.info" class="underline hover:text-black dark:hover:text-white">Whole Earth Index</a> to scan and digitize all of these old issues, by <a href="https://grayarea.org/" class="underline hover:text-black dark:hover:text-white">Gray Area</a> and <a href="https://archive.org/" class="underline hover:text-black dark:hover:text-white">Internet Archive</a>. That effort was led by <a href="https://barrythrew.com/" class="underline hover:text-black dark:hover:text-white">Barry Threw</a>, designed by <a href="https://jongacnik.com/" class="underline hover:text-black dark:hover:text-white">Jon Gacnik</a> and <a href="https://mindyseu.com/" class="underline hover:text-black dark:hover:text-white">Mindy Seu</a>. More info <a href="https://wholeearth.info/information" class="underline hover:text-black dark:hover:text-white">here</a>. This site (+ OCR-ing these pages, embeddings, search functionality, and this webapp) was built by <a href="https://lucasgelfond.online" class="underline hover:text-black dark:hover:text-white">Lucas Gelfond</a>, you can read the source <a href="https://github.com/lucasgelfond/search-whole-earth" class="underline hover:text-black dark:hover:text-white">here</a>.
     </h2>
 
-    <div class="flex-none py-2">
-      <input
-        type="text"
-        class="border border-black dark:border-white rounded px-2 py-1 bg-white dark:bg-black text-black dark:text-white"
-        placeholder="Enter text to search..."
-        bind:value={input}
-        on:keypress={handleKeyPress}
-        disabled={loading}
-      />
+    <div class="flex-none py-2 flex items-center gap-2">
+      <div class="relative">
+        <input
+          type="text"
+          class="border border-black dark:border-white rounded px-2 py-1 bg-white dark:bg-black text-black dark:text-white disabled:opacity-50"
+          placeholder="Enter text to search..."
+          bind:value={input}
+          on:keypress={handleKeyPress}
+          disabled={loading}
+        />
+        <span
+          class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-gray-400 dark:border-gray-500 border-t-transparent rounded-full animate-spin transition-opacity duration-150"
+          class:opacity-0={!loading}
+          class:opacity-100={loading}
+        ></span>
+      </div>
       <button
         class="border border-black dark:border-white text-black dark:text-white px-4 py-1 rounded hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         on:click={() => handleSearch(input)}
         disabled={loading}
       >
-        {#if loading}
-          <span class="inline-block w-4 h-4 border-2 border-black dark:border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-          Searching...
-        {:else}
-          Search
-        {/if}
+        Search
       </button>
     </div>
 
-    <div class="flex-1 min-h-0 overflow-y-auto pb-8">
+    <div class="flex-1 min-h-0 overflow-y-auto pb-8 scroll-smooth">
       <SearchResults
         results={result}
         issueMap={$issueMap}
@@ -152,7 +154,7 @@ function handleKeyPress(event: KeyboardEvent) {
     >
       <button
         aria-label="Close modal"
-        class="absolute top-3 right-3 z-10 text-black dark:text-white bg-white/70 dark:bg-black/70 rounded-sm text-xl w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-white/90 dark:hover:bg-black/90"
+        class="absolute top-3 right-3 z-10 text-black dark:text-white bg-white dark:bg-black border border-black dark:border-white rounded text-xl w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
         on:click={handleModalClose}
       >×</button>
       <ResultModal {...modalProps} />
