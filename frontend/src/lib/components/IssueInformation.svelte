@@ -1,7 +1,9 @@
 <script lang="ts">
-export let issue: any;
-export let collectionMap: Record<string, string>;
-export let currentPageNumber: number;
+let { issue, collectionMap, currentPageNumber }: {
+	issue: any;
+	collectionMap: Record<string, string>;
+	currentPageNumber: number;
+} = $props();
 </script>
 
 <div class="flex flex-col gap-3">
@@ -16,7 +18,7 @@ export let currentPageNumber: number;
       href={issue.internet_archive}
       class="text-blue-600 dark:text-blue-400 hover:underline"
       target="_blank"
-      on:click|stopPropagation
+      onclick={(e: MouseEvent) => e.stopPropagation()}
     >
       Archive
     </a>
@@ -24,7 +26,7 @@ export let currentPageNumber: number;
       href={issue.issue_url}
       class="text-blue-600 dark:text-blue-400 hover:underline"
       target="_blank"
-      on:click|stopPropagation
+      onclick={(e: MouseEvent) => e.stopPropagation()}
     >
       Info
     </a>
@@ -32,7 +34,7 @@ export let currentPageNumber: number;
       href={issue.pdf_download}
       class="text-blue-600 dark:text-blue-400 hover:underline"
       target="_blank"
-      on:click|stopPropagation
+      onclick={(e: MouseEvent) => e.stopPropagation()}
     >
       PDF
     </a>

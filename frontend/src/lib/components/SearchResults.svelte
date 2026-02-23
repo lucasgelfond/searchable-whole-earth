@@ -1,13 +1,13 @@
 <script lang="ts">
 import SearchResult from './SearchResult.svelte';
 
-// Props
-export let results: any[] = [];
-export let issueMap: Record<string, any> = {};
-export let openModal: (item: any, issue: any) => void;
-export let query: string = '';
+let { results = [], issueMap = {}, openModal, query = '' }: {
+	results?: any[];
+	issueMap?: Record<string, any>;
+	openModal: (item: any, issue: any) => void;
+	query?: string;
+} = $props();
 
-// Function to show the result modal
 function showResultModal(item: any) {
 	const issue = issueMap[item.parent_issue_id];
 	openModal(item, issue);
@@ -23,7 +23,7 @@ function showResultModal(item: any) {
           {item}
           {issueMap}
           {query}
-          on:select={(event) => showResultModal(event.detail)}
+          onselect={showResultModal}
         />
       {/each}
     </div>

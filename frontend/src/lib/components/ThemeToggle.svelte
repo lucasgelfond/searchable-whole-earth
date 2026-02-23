@@ -53,18 +53,16 @@
 		})
 	);
 
-	export let compact = false;
+	let { compact = false }: { compact?: boolean } = $props();
 
 	let canvasEl: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
 	let animFrame: number;
 	let rotation = 0;
 	let speed = BASE_SPEED;
-	let hovering = false;
+	let hovering = $state(false);
 	let lastTime = 0;
-	let darkMode = true;
-
-	$: darkMode = $isDarkMode;
+	let darkMode = $derived($isDarkMode);
 
 	function render(time: number) {
 		const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.1) : 0;
@@ -123,11 +121,11 @@
 <button
 	aria-label="Toggle theme"
 	class="toggle-btn"
-	on:click={toggleTheme}
-	on:mouseenter={() => (hovering = true)}
-	on:mouseleave={() => (hovering = false)}
+	onclick={toggleTheme}
+	onmouseenter={() => (hovering = true)}
+	onmouseleave={() => (hovering = false)}
 >
-	<canvas bind:this={canvasEl} width={SIZE} height={SIZE} class="earth-canvas" class:compact />
+	<canvas bind:this={canvasEl} width={SIZE} height={SIZE} class="earth-canvas" class:compact></canvas>
 </button>
 
 <style>

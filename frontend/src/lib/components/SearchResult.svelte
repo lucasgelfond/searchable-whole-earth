@@ -1,25 +1,19 @@
 <script lang="ts">
-import { collectionMap } from '../utils/collections';
+import { collectionMap } from '../../utils/collections';
 import { highlightQuery } from '$lib';
 
-// Props
-export let item: any;
-export let issueMap: Record<string, any> = {};
-export let query: string = '';
-
-// Dispatch click event to parent
-import { createEventDispatcher } from 'svelte';
-const dispatch = createEventDispatcher();
-
-function handleClick() {
-	dispatch('select', item);
-}
+let { item, issueMap = {}, query = '', onselect }: {
+	item: any;
+	issueMap?: Record<string, any>;
+	query?: string;
+	onselect: (item: any) => void;
+} = $props();
 </script>
 
-<button 
+<button
   type="button"
   class="text-left border border-black dark:border-white p-4 grid grid-cols-[1fr] min-[350px]:grid-cols-[100px_1fr] md:grid-cols-[140px_200px_1fr] gap-3 md:gap-6 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 w-full text-black dark:text-white bg-white dark:bg-black"
-  on:click={handleClick}
+  onclick={() => onselect(item)}
 >
   <!-- Image column - only show above 350px width -->
   <div class="hidden min-[350px]:flex w-[100px] md:w-[140px] h-[140px] md:h-[200px] self-start items-center justify-center overflow-hidden">
@@ -31,7 +25,7 @@ function handleClick() {
       />
     {/if}
   </div>
-  
+
   <!-- Mobile: Combined metadata and content, Desktop: Just metadata -->
   <div class="flex flex-col md:hidden">
     {#if issueMap[item.parent_issue_id]}
@@ -47,7 +41,7 @@ function handleClick() {
           href={issueMap[item.parent_issue_id].internet_archive}
           class="text-blue-600 dark:text-blue-400 hover:underline"
           target="_blank"
-          on:click|stopPropagation
+          onclick={(e: MouseEvent) => e.stopPropagation()}
         >
           Archive
         </a>
@@ -55,7 +49,7 @@ function handleClick() {
           href={issueMap[item.parent_issue_id].issue_url}
           class="text-blue-600 dark:text-blue-400 hover:underline"
           target="_blank"
-          on:click|stopPropagation
+          onclick={(e: MouseEvent) => e.stopPropagation()}
         >
           Info
         </a>
@@ -66,7 +60,7 @@ function handleClick() {
       {@html highlightQuery(item.ocr_result || 'No text available', query)}
     </div>
   </div>
-  
+
   <!-- Desktop only: Metadata column -->
   <div class="hidden md:flex flex-col justify-between h-full">
     {#if issueMap[item.parent_issue_id]}
@@ -80,7 +74,7 @@ function handleClick() {
           href={issueMap[item.parent_issue_id].internet_archive}
           class="text-blue-600 dark:text-blue-400 hover:underline"
           target="_blank"
-          on:click|stopPropagation
+          onclick={(e: MouseEvent) => e.stopPropagation()}
         >
           Archive
         </a>
@@ -88,7 +82,7 @@ function handleClick() {
           href={issueMap[item.parent_issue_id].issue_url}
           class="text-blue-600 dark:text-blue-400 hover:underline"
           target="_blank"
-          on:click|stopPropagation
+          onclick={(e: MouseEvent) => e.stopPropagation()}
         >
           Info
         </a>
@@ -96,14 +90,14 @@ function handleClick() {
           href={issueMap[item.parent_issue_id].pdf_download}
           class="text-blue-600 dark:text-blue-400 hover:underline"
           target="_blank"
-          on:click|stopPropagation
+          onclick={(e: MouseEvent) => e.stopPropagation()}
         >
           PDF
         </a>
       </div>
     {/if}
   </div>
-  
+
   <!-- Desktop only: OCR content column -->
   <div class="hidden md:block h-[200px] overflow-y-auto text-sm text-black dark:text-white tracking-[0.01em] leading-[1.6]">
     {@html highlightQuery(item.ocr_result || 'No text available', query)}

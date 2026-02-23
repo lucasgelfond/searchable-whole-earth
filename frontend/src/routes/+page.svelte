@@ -3,24 +3,25 @@ import { onMount } from 'svelte';
 import { fade, slide } from 'svelte/transition';
 import { cubicOut } from 'svelte/easing';
 import { page } from '$app/stores';
-import SearchResults from '../components/SearchResults.svelte';
-import ResultModal from '../components/ResultModal.svelte';
+import SearchResults from '$lib/components/SearchResults.svelte';
+import ResultModal from '$lib/components/ResultModal.svelte';
 import { searchQuery, isFullScreen, updateUrlParams } from '$lib';
-import ThemeToggle from '../components/ThemeToggle.svelte';
-import { writable } from 'svelte/store';
-import { getIssues, search, warmNamespace } from '../utils/api';
+import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+import { search, warmNamespace } from '../utils/api';
+
+let { data } = $props();
 
 const urlIssueId = $page.url.searchParams.get('issue');
 const urlPageNum = $page.url.searchParams.get('page');
 const urlFullScreen = $page.url.searchParams.get('fullscreen') === '1';
 
-let input = $page.url.searchParams.get('search') || '';
-let result: any[] = [];
-let loading = false;
-const issueMap = writable<Record<string, any>>({});
+let input = $state($page.url.searchParams.get('search') || '');
+let result: any[] = $state([]);
+let loading = $state(false);
+let issueMap = $state(data.issueMap);
 
-let modalProps: Record<string, any> | null = null;
-let scrolled = false;
+let modalProps: Record<string, any> | null = $state(null);
+let scrolled = $state(false);
 let scrollContainer: HTMLDivElement;
 let headerEl: HTMLDivElement;
 
@@ -39,15 +40,6 @@ if (urlIssueId && urlPageNum) {
 	};
 }
 
-async function fetchIssues() {
-	try {
-		const issues = await getIssues();
-		issueMap.set(issues);
-	} catch (error) {
-		console.error('Failed to fetch issues:', error);
-	}
-}
-
 function openModal(item: any, issue: any) {
 	updateUrlParams({ issue: issue.id, page: String(item.page_number) });
 	modalProps = { item, issue };
@@ -60,7 +52,6 @@ function handleModalClose() {
 }
 
 onMount(() => {
-	fetchIssues();
 	warmNamespace();
 	if (input) handleSearch(input, false);
 });
@@ -97,7 +88,7 @@ function handleSubmit(event: Event) {
   <meta name="twitter:image" content="https://searchwhole.earth/werdemo.gif?v=4" />
 </svelte:head>
 
-<svelte:window on:keydown={(e) => { if (e.key === 'Escape' && modalProps) handleModalClose(); }} />
+<svelte:window onkeydown={(e) => { if (e.key === 'Escape' && modalProps) handleModalClose(); }} />
 
 <div class="flex flex-col h-screen overflow-hidden text-black dark:text-white bg-white dark:bg-black">
 
@@ -112,7 +103,7 @@ function handleSubmit(event: Event) {
       <!-- Row 1 on mobile: title + globe. Single row on desktop: everything -->
       <button
         class="text-xl font-bold shrink-0 whitespace-nowrap text-black dark:text-white leading-none cursor-pointer hover:opacity-70 transition-opacity bg-transparent border-none p-0"
-        on:click={() => scrollContainer.scrollTo({ top: 0, behavior: 'smooth' })}
+        onclick={() => scrollContainer.scrollTo({ top: 0, behavior: 'smooth' })}
       >
         The (Searchable) Whole Earth
       </button>
@@ -120,7 +111,7 @@ function handleSubmit(event: Event) {
         <ThemeToggle compact={true} />
       </div>
       <!-- Row 2 on mobile: search. Inline on desktop -->
-      <form on:submit={handleSubmit} class="flex items-center gap-2 basis-full md:basis-auto md:flex-1 md:min-w-0">
+      <form onsubmit={handleSubmit} class="flex items-center gap-2 basis-full md:basis-auto md:flex-1 md:min-w-0">
         <div class="relative flex-1">
           <input
             type="search"
@@ -152,7 +143,7 @@ function handleSubmit(event: Event) {
   <div
     class="flex-1 min-h-0 overflow-y-auto scroll-smooth"
     bind:this={scrollContainer}
-    on:scroll={handleScroll}
+    onscroll={handleScroll}
   >
     <!-- Full header -->
     <div bind:this={headerEl} class="px-4 md:px-20 pt-8 md:pt-12 pb-4">
@@ -169,7 +160,7 @@ function handleSubmit(event: Event) {
         Based on the (incredible) archiving effort of the <a href="https://wholeearth.info" class="underline hover:text-black dark:hover:text-white">Whole Earth Index</a> to scan and digitize all of these old issues, by <a href="https://grayarea.org/" class="underline hover:text-black dark:hover:text-white">Gray Area</a> and <a href="https://archive.org/" class="underline hover:text-black dark:hover:text-white">Internet Archive</a>. That effort was led by <a href="https://barrythrew.com/" class="underline hover:text-black dark:hover:text-white">Barry Threw</a>, designed by <a href="https://jongacnik.com/" class="underline hover:text-black dark:hover:text-white">Jon Gacnik</a> and <a href="https://mindyseu.com/" class="underline hover:text-black dark:hover:text-white">Mindy Seu</a>. More info <a href="https://wholeearth.info/information" class="underline hover:text-black dark:hover:text-white">here</a>. This site (+ OCR-ing these pages, embeddings, search functionality, and this webapp) was built by <a href="https://lucasgelfond.online" class="underline hover:text-black dark:hover:text-white">Lucas Gelfond</a>, you can read the source <a href="https://github.com/lucasgelfond/search-whole-earth" class="underline hover:text-black dark:hover:text-white">here</a>.
       </h2>
 
-      <form on:submit={handleSubmit} class="flex items-center gap-2 max-w-[60vh] py-2">
+      <form onsubmit={handleSubmit} class="flex items-center gap-2 max-w-[60vh] py-2">
         <div class="relative flex-1">
           <input
             type="search"
@@ -199,7 +190,7 @@ function handleSubmit(event: Event) {
     <div class="px-4 md:px-20 pb-8">
       <SearchResults
         results={result}
-        issueMap={$issueMap}
+        {issueMap}
         {openModal}
         query={input}
       />
@@ -208,11 +199,11 @@ function handleSubmit(event: Event) {
 </div>
 
 {#if modalProps}
-  <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
   <div
     transition:fade={{ duration: 150 }}
     class="fixed inset-0 z-50 flex items-center justify-center bg-white/85 dark:bg-black/85"
-    on:click|self={handleModalClose}
+    onclick={(e: MouseEvent) => { if (e.target === e.currentTarget) handleModalClose(); }}
   >
     <div
       class="relative bg-white dark:bg-black border border-black dark:border-white overflow-hidden w-[90vw] h-[90vh] max-w-none"
@@ -220,7 +211,7 @@ function handleSubmit(event: Event) {
       <button
         aria-label="Close modal"
         class="absolute top-3 right-3 z-10 text-black dark:text-white w-8 h-8 flex items-center justify-center cursor-pointer hover:opacity-70 transition-opacity"
-        on:click={handleModalClose}
+        onclick={handleModalClose}
       ><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       <ResultModal {...modalProps} />
     </div>
