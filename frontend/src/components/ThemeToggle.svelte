@@ -166,8 +166,8 @@
 
 	@media (min-width: 768px) {
 		.earth-canvas.compact {
-			width: 1.75rem;
-			height: 1.75rem;
+			width: 2rem;
+			height: 2rem;
 		}
 	}
 </style>
