@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import { goto } from '$app/navigation';
+import { replaceState } from '$app/navigation';
 
 export const searchQuery = writable('');
 export const isFullScreen = writable(false);
@@ -30,8 +30,6 @@ export function toggleTheme() {
 	});
 }
 
-const GOTO_OPTS = { replaceState: true, keepFocus: true, noScroll: true } as const;
-
 export function updateUrlParams(params: Record<string, string | null>) {
 	const url = new URL(window.location.href);
 	for (const [key, value] of Object.entries(params)) {
@@ -41,7 +39,7 @@ export function updateUrlParams(params: Record<string, string | null>) {
 			url.searchParams.set(key, value);
 		}
 	}
-	goto(url.pathname + url.search, GOTO_OPTS);
+	replaceState(url.pathname + url.search, {});
 }
 
 export function highlightQuery(text: string, query: string): string {
