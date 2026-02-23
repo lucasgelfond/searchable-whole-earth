@@ -9,6 +9,9 @@
 		%sveltekit.head%
 		<script>
 			(function() {
+				if (location.hostname === 'searchable-whole-earth.pages.dev') {
+					location.replace('https://searchwhole.earth' + location.pathname + location.search + location.hash);
+				}
 				var theme = localStorage.getItem('theme-preference');
 				if (!theme) theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 				if (theme === 'light') document.documentElement.classList.remove('dark');
