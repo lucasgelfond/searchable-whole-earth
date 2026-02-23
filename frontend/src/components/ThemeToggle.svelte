@@ -53,6 +53,8 @@
 		})
 	);
 
+	export let compact = false;
+
 	let canvasEl: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
 	let animFrame: number;
@@ -125,7 +127,7 @@
 	on:mouseenter={() => (hovering = true)}
 	on:mouseleave={() => (hovering = false)}
 >
-	<canvas bind:this={canvasEl} width={SIZE} height={SIZE} class="earth-canvas" />
+	<canvas bind:this={canvasEl} width={SIZE} height={SIZE} class="earth-canvas" class:compact />
 </button>
 
 <style>
@@ -137,7 +139,6 @@
 		cursor: pointer;
 		line-height: 0;
 		flex-shrink: 0;
-		align-self: start;
 	}
 
 	.earth-canvas {
@@ -146,6 +147,9 @@
 		image-rendering: -moz-crisp-edges;
 		image-rendering: pixelated;
 		display: block;
+		transition:
+			width 200ms cubic-bezier(0.645, 0.045, 0.355, 1),
+			height 200ms cubic-bezier(0.645, 0.045, 0.355, 1);
 	}
 
 	@media (min-width: 768px) {
@@ -153,5 +157,10 @@
 			width: 3rem;
 			height: 3rem;
 		}
+	}
+
+	.earth-canvas.compact {
+		width: 1.75rem;
+		height: 1.75rem;
 	}
 </style>

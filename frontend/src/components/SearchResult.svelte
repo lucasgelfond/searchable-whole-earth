@@ -18,7 +18,7 @@ function handleClick() {
 
 <button 
   type="button"
-  class="text-left border border-black dark:border-white rounded p-4 grid grid-cols-[1fr] min-[350px]:grid-cols-[100px_1fr] md:grid-cols-[140px_200px_1fr] gap-3 md:gap-6 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 w-full text-black dark:text-white bg-white dark:bg-black"
+  class="text-left border border-black dark:border-white p-4 grid grid-cols-[1fr] min-[350px]:grid-cols-[100px_1fr] md:grid-cols-[140px_200px_1fr] gap-3 md:gap-6 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 w-full text-black dark:text-white bg-white dark:bg-black"
   on:click={handleClick}
 >
   <!-- Image column - only show above 350px width -->

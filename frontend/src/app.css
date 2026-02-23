@@ -55,3 +55,17 @@ html.dark #app {
 strong, b {
 	-webkit-text-stroke: 0.6px currentColor;
 }
+
+/* Custom focus — square, matches theme instead of default blue */
+*:focus-visible {
+	outline: 1px solid currentColor !important;
+	outline-offset: 2px !important;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+	}
+}

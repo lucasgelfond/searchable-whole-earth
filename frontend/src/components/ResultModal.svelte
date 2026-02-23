@@ -278,7 +278,7 @@ onDestroy(() => {
     <div class="absolute inset-y-0 left-0 flex items-center">
       <button
         aria-label="Previous page"
-        class="bg-white/70 dark:bg-black/70 text-black dark:text-white p-2 rounded-r-lg hover:bg-white/90 dark:hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+        class="bg-white/70 dark:bg-black/70 text-black dark:text-white p-2 hover:bg-white/90 dark:hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
         disabled={$currentPageNumber <= 1 || $loading || !$allPages[$currentPageNumber - 1]}
         on:click={() => changePage($currentPageNumber - 1)}
       >
@@ -289,7 +289,7 @@ onDestroy(() => {
     <div class="absolute inset-y-0 right-0 flex items-center">
       <button
         aria-label="Next page"
-        class="bg-white/70 dark:bg-black/70 text-black dark:text-white p-2 rounded-l-lg hover:bg-white/90 dark:hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+        class="bg-white/70 dark:bg-black/70 text-black dark:text-white p-2 hover:bg-white/90 dark:hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
         disabled={$currentPageNumber >= issue.num_pages || $loading || !$allPages[$currentPageNumber + 1]}
         on:click={() => changePage($currentPageNumber + 1)}
       >
@@ -299,7 +299,7 @@ onDestroy(() => {
 
     <button
       aria-label="Enter fullscreen"
-      class="absolute top-3 right-12 bg-white/70 dark:bg-black/70 text-black dark:text-white p-2 rounded-sm hover:bg-white/90 dark:hover:bg-black/90 flex items-center justify-center"
+      class="absolute top-3 right-12 bg-white/70 dark:bg-black/70 text-black dark:text-white p-2 hover:bg-white/90 dark:hover:bg-black/90 flex items-center justify-center"
       on:click={toggleFullScreen}
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>

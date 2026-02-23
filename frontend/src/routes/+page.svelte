@@ -1,6 +1,7 @@
 <script lang="ts">
 import { onMount } from 'svelte';
-import { fade } from 'svelte/transition';
+import { fade, slide } from 'svelte/transition';
+import { cubicOut } from 'svelte/easing';
 import { page } from '$app/stores';
 import SearchResults from '../components/SearchResults.svelte';
 import ResultModal from '../components/ResultModal.svelte';
@@ -19,6 +20,14 @@ let loading = false;
 const issueMap = writable<Record<string, any>>({});
 
 let modalProps: Record<string, any> | null = null;
+let scrolled = false;
+let scrollContainer: HTMLDivElement;
+let headerEl: HTMLDivElement;
+
+function handleScroll() {
+	if (!headerEl || !scrollContainer) return;
+	scrolled = scrollContainer.scrollTop > headerEl.offsetHeight - 20;
+}
 
 searchQuery.set(input);
 
@@ -92,48 +101,96 @@ function handleKeyPress(event: KeyboardEvent) {
 <svelte:window on:keydown={(e) => { if (e.key === 'Escape' && modalProps) handleModalClose(); }} />
 
 <div class="flex flex-col h-screen overflow-hidden text-black dark:text-white bg-white dark:bg-black">
-  <div class="flex-none px-4 md:px-20 pt-8 md:pt-12 pb-4">
-    <div class="flex justify-between items-start gap-4">
-      <h1 class="text-4xl md:text-5xl font-bold mb-6 text-black dark:text-white leading-none">
+
+  <!-- Fixed compact toolbar: slides in when scrolled past the full header -->
+  {#if scrolled}
+  <div
+    class="fixed top-0 inset-x-0 z-40 px-4 md:px-20 py-3 bg-white dark:bg-black border-b border-black/10 dark:border-white/10"
+    in:slide={{ duration: 200, easing: cubicOut, axis: 'y' }}
+    out:slide={{ duration: 150, easing: cubicOut, axis: 'y' }}
+  >
+    <div class="flex items-center gap-3">
+      <h1 class="text-xl font-bold shrink-0 whitespace-nowrap text-black dark:text-white leading-none">
         The (Searchable) Whole Earth
       </h1>
-      <div class="pt-[0.15em]">
-        <ThemeToggle />
+      <div class="flex items-center gap-2 flex-1 min-w-0">
+        <div class="relative flex-1">
+          <input
+            type="text"
+            class="w-full border border-black dark:border-white px-2 py-1 bg-white dark:bg-black text-black dark:text-white disabled:opacity-50"
+            placeholder="Enter text to search..."
+            bind:value={input}
+            on:keypress={handleKeyPress}
+            disabled={loading}
+          />
+          <span
+            class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-gray-400 dark:border-gray-500 border-t-transparent rounded-full animate-spin transition-opacity duration-150"
+            class:opacity-0={!loading}
+            class:opacity-100={loading}
+          ></span>
+        </div>
+        <button
+          class="shrink-0 border border-black dark:border-white text-black dark:text-white px-4 py-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black disabled:opacity-50 disabled:cursor-not-allowed"
+          on:click={() => handleSearch(input)}
+          disabled={loading}
+        >
+          Search
+        </button>
       </div>
+      <ThemeToggle compact={true} />
     </div>
   </div>
+  {/if}
 
-  <div class="flex flex-col flex-1 min-h-0 px-4 md:px-20">
-    <h2 class="flex-none text-sm mb-3 text-gray-600 dark:text-gray-300 max-w-[60vh] leading-relaxed">
-      Based on the (incredible) archiving effort of the <a href="https://wholeearth.info" class="underline hover:text-black dark:hover:text-white">Whole Earth Index</a> to scan and digitize all of these old issues, by <a href="https://grayarea.org/" class="underline hover:text-black dark:hover:text-white">Gray Area</a> and <a href="https://archive.org/" class="underline hover:text-black dark:hover:text-white">Internet Archive</a>. That effort was led by <a href="https://barrythrew.com/" class="underline hover:text-black dark:hover:text-white">Barry Threw</a>, designed by <a href="https://jongacnik.com/" class="underline hover:text-black dark:hover:text-white">Jon Gacnik</a> and <a href="https://mindyseu.com/" class="underline hover:text-black dark:hover:text-white">Mindy Seu</a>. More info <a href="https://wholeearth.info/information" class="underline hover:text-black dark:hover:text-white">here</a>. This site (+ OCR-ing these pages, embeddings, search functionality, and this webapp) was built by <a href="https://lucasgelfond.online" class="underline hover:text-black dark:hover:text-white">Lucas Gelfond</a>, you can read the source <a href="https://github.com/lucasgelfond/search-whole-earth" class="underline hover:text-black dark:hover:text-white">here</a>.
-    </h2>
-
-    <div class="flex-none py-2 flex items-center gap-2">
-      <div class="relative">
-        <input
-          type="text"
-          class="border border-black dark:border-white rounded px-2 py-1 bg-white dark:bg-black text-black dark:text-white disabled:opacity-50"
-          placeholder="Enter text to search..."
-          bind:value={input}
-          on:keypress={handleKeyPress}
-          disabled={loading}
-        />
-        <span
-          class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-gray-400 dark:border-gray-500 border-t-transparent rounded-full animate-spin transition-opacity duration-150"
-          class:opacity-0={!loading}
-          class:opacity-100={loading}
-        ></span>
+  <!-- Scrollable area: full header scrolls with content -->
+  <div
+    class="flex-1 min-h-0 overflow-y-auto scroll-smooth"
+    bind:this={scrollContainer}
+    on:scroll={handleScroll}
+  >
+    <!-- Full header -->
+    <div bind:this={headerEl} class="px-4 md:px-20 pt-8 md:pt-12 pb-4">
+      <div class="flex justify-between items-start gap-4">
+        <h1 class="text-4xl md:text-5xl font-bold text-black dark:text-white leading-none">
+          The (Searchable) Whole Earth
+        </h1>
+        <div class="pt-[0.15em]">
+          <ThemeToggle />
+        </div>
       </div>
-      <button
-        class="border border-black dark:border-white text-black dark:text-white px-4 py-1 rounded hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black disabled:opacity-50 disabled:cursor-not-allowed"
-        on:click={() => handleSearch(input)}
-        disabled={loading}
-      >
-        Search
-      </button>
+
+      <h2 class="text-sm mt-6 mb-3 text-gray-600 dark:text-gray-300 max-w-[60vh] leading-relaxed">
+        Based on the (incredible) archiving effort of the <a href="https://wholeearth.info" class="underline hover:text-black dark:hover:text-white">Whole Earth Index</a> to scan and digitize all of these old issues, by <a href="https://grayarea.org/" class="underline hover:text-black dark:hover:text-white">Gray Area</a> and <a href="https://archive.org/" class="underline hover:text-black dark:hover:text-white">Internet Archive</a>. That effort was led by <a href="https://barrythrew.com/" class="underline hover:text-black dark:hover:text-white">Barry Threw</a>, designed by <a href="https://jongacnik.com/" class="underline hover:text-black dark:hover:text-white">Jon Gacnik</a> and <a href="https://mindyseu.com/" class="underline hover:text-black dark:hover:text-white">Mindy Seu</a>. More info <a href="https://wholeearth.info/information" class="underline hover:text-black dark:hover:text-white">here</a>. This site (+ OCR-ing these pages, embeddings, search functionality, and this webapp) was built by <a href="https://lucasgelfond.online" class="underline hover:text-black dark:hover:text-white">Lucas Gelfond</a>, you can read the source <a href="https://github.com/lucasgelfond/search-whole-earth" class="underline hover:text-black dark:hover:text-white">here</a>.
+      </h2>
+
+      <div class="flex items-center gap-2 max-w-[60vh] py-2">
+        <div class="relative flex-1">
+          <input
+            type="text"
+            class="w-full border border-black dark:border-white px-2 py-1 bg-white dark:bg-black text-black dark:text-white disabled:opacity-50"
+            placeholder="Enter text to search..."
+            bind:value={input}
+            on:keypress={handleKeyPress}
+            disabled={loading}
+          />
+          <span
+            class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-gray-400 dark:border-gray-500 border-t-transparent rounded-full animate-spin transition-opacity duration-150"
+            class:opacity-0={!loading}
+            class:opacity-100={loading}
+          ></span>
+        </div>
+        <button
+          class="shrink-0 border border-black dark:border-white text-black dark:text-white px-4 py-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black disabled:opacity-50 disabled:cursor-not-allowed"
+          on:click={() => handleSearch(input)}
+          disabled={loading}
+        >
+          Search
+        </button>
+      </div>
     </div>
 
-    <div class="flex-1 min-h-0 overflow-y-auto pb-8 scroll-smooth">
+    <!-- Results -->
+    <div class="px-4 md:px-20 pb-8">
       <SearchResults
         results={result}
         issueMap={$issueMap}
@@ -152,11 +209,11 @@ function handleKeyPress(event: KeyboardEvent) {
     on:click|self={handleModalClose}
   >
     <div
-      class="relative bg-white dark:bg-black border border-black dark:border-white rounded-lg overflow-hidden w-[90vw] h-[90vh] max-w-none"
+      class="relative bg-white dark:bg-black border border-black dark:border-white overflow-hidden w-[90vw] h-[90vh] max-w-none"
     >
       <button
         aria-label="Close modal"
-        class="absolute top-3 right-3 z-10 text-black dark:text-white w-8 h-8 flex items-center justify-center cursor-pointer opacity-50 hover:opacity-100 transition-opacity"
+        class="absolute top-3 right-3 z-10 text-black dark:text-white w-8 h-8 flex items-center justify-center cursor-pointer hover:opacity-70 transition-opacity"
         on:click={handleModalClose}
       ><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       <ResultModal {...modalProps} />
