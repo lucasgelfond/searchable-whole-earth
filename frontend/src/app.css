@@ -56,10 +56,14 @@ strong, b {
 	-webkit-text-stroke: 0.6px currentColor;
 }
 
-/* Custom focus — square, matches theme instead of default blue */
+/* Focus: no outline, inset box-shadow to thicken border without layout shift */
 *:focus-visible {
-	outline: 1px solid currentColor !important;
-	outline-offset: 2px !important;
+	outline: none !important;
+}
+
+input:focus-visible,
+button:focus-visible {
+	box-shadow: inset 0 0 0 1px currentColor !important;
 }
 
 
