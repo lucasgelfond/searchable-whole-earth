@@ -19,6 +19,7 @@ const urlFullScreen = $page.url.searchParams.get('fullscreen') === '1';
 let input = $state($page.url.searchParams.get('search') || '');
 let result: SearchResult[] = $state([]);
 let loading = $state(false);
+let error = $state('');
 let issueMap: IssueMap = $state(data.issueMap);
 
 let modalProps: ComponentProps<typeof ResultModal> | null = $state(null);
@@ -60,13 +61,15 @@ onMount(() => {
 async function handleSearch(query: string, updateUrl = true) {
 	if (loading) return;
 	loading = true;
+	error = '';
 	searchQuery.set(query);
 	if (updateUrl) updateUrlParams({ search: query || null });
 	try {
 		const results = await search(query);
 		result = results;
-	} catch (error) {
-		console.error('Search error:', error);
+	} catch (e) {
+		console.error('Search error:', e);
+		error = 'Search failed. Please try again.';
 	} finally {
 		loading = false;
 	}
@@ -112,7 +115,7 @@ function handleSubmit(event: Event) {
         <ThemeToggle compact={true} />
       </div>
       <!-- Row 2 on mobile: search. Inline on desktop -->
-      <form onsubmit={handleSubmit} class="flex items-center gap-2 basis-full md:basis-auto md:flex-1 md:min-w-0">
+      <form onsubmit={handleSubmit} class="flex flex-wrap items-center gap-2 basis-full md:basis-auto md:flex-1 md:min-w-0">
         <div class="relative flex-1">
           <input
             type="search"
@@ -135,6 +138,9 @@ function handleSubmit(event: Event) {
         >
           Search
         </button>
+        {#if error}
+          <p class="basis-full text-sm text-red-600 dark:text-red-400">{error}</p>
+        {/if}
       </form>
     </div>
   </div>
@@ -161,7 +167,7 @@ function handleSubmit(event: Event) {
         Based on the (incredible) archiving effort of the <a href="https://wholeearth.info" class="underline hover:text-black dark:hover:text-white">Whole Earth Index</a> to scan and digitize all of these old issues, by <a href="https://grayarea.org/" class="underline hover:text-black dark:hover:text-white">Gray Area</a> and <a href="https://archive.org/" class="underline hover:text-black dark:hover:text-white">Internet Archive</a>. That effort was led by <a href="https://barrythrew.com/" class="underline hover:text-black dark:hover:text-white">Barry Threw</a>, designed by <a href="https://jongacnik.com/" class="underline hover:text-black dark:hover:text-white">Jon Gacnik</a> and <a href="https://mindyseu.com/" class="underline hover:text-black dark:hover:text-white">Mindy Seu</a>. More info <a href="https://wholeearth.info/information" class="underline hover:text-black dark:hover:text-white">here</a>. This site (+ OCR-ing these pages, embeddings, search functionality, and this webapp) was built by <a href="https://lucasgelfond.online" class="underline hover:text-black dark:hover:text-white">Lucas Gelfond</a>, you can read the source <a href="https://github.com/lucasgelfond/search-whole-earth" class="underline hover:text-black dark:hover:text-white">here</a>.
       </h2>
 
-      <form onsubmit={handleSubmit} class="flex items-center gap-2 max-w-[60vh] py-2">
+      <form onsubmit={handleSubmit} class="flex flex-wrap items-center gap-2 max-w-[60vh] py-2">
         <div class="relative flex-1">
           <input
             type="search"
@@ -184,6 +190,9 @@ function handleSubmit(event: Event) {
         >
           Search
         </button>
+        {#if error}
+          <p class="basis-full text-sm text-red-600 dark:text-red-400">{error}</p>
+        {/if}
       </form>
     </div>
 
