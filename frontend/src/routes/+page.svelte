@@ -110,9 +110,12 @@ function handleKeyPress(event: KeyboardEvent) {
     out:slide={{ duration: 150, easing: cubicOut, axis: 'y' }}
   >
     <div class="flex items-center gap-3">
-      <h1 class="text-xl font-bold shrink-0 whitespace-nowrap text-black dark:text-white leading-none">
+      <button
+        class="text-xl font-bold shrink-0 whitespace-nowrap text-black dark:text-white leading-none cursor-pointer hover:opacity-70 transition-opacity bg-transparent border-none p-0"
+        on:click={() => scrollContainer.scrollTo({ top: 0, behavior: 'smooth' })}
+      >
         The (Searchable) Whole Earth
-      </h1>
+      </button>
       <div class="flex items-center gap-2 flex-1 min-w-0">
         <div class="relative flex-1">
           <input
