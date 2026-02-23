@@ -7,7 +7,8 @@ import SearchResults from '$lib/components/SearchResults.svelte';
 import ResultModal from '$lib/components/ResultModal.svelte';
 import { searchQuery, isFullScreen, updateUrlParams } from '$lib';
 import ThemeToggle from '$lib/components/ThemeToggle.svelte';
-import { search, warmNamespace } from '../utils/api';
+import { search, warmNamespace, type SearchResult, type Issue, type IssueMap } from '../utils/api';
+import type { ComponentProps } from 'svelte';
 
 let { data } = $props();
 
@@ -16,11 +17,11 @@ const urlPageNum = $page.url.searchParams.get('page');
 const urlFullScreen = $page.url.searchParams.get('fullscreen') === '1';
 
 let input = $state($page.url.searchParams.get('search') || '');
-let result: any[] = $state([]);
+let result: SearchResult[] = $state([]);
 let loading = $state(false);
-let issueMap = $state(data.issueMap);
+let issueMap: IssueMap = $state(data.issueMap);
 
-let modalProps: Record<string, any> | null = $state(null);
+let modalProps: ComponentProps<typeof ResultModal> | null = $state(null);
 let scrolled = $state(false);
 let scrollContainer: HTMLDivElement;
 let headerEl: HTMLDivElement;
@@ -40,7 +41,7 @@ if (urlIssueId && urlPageNum) {
 	};
 }
 
-function openModal(item: any, issue: any) {
+function openModal(item: SearchResult, issue: Issue) {
 	updateUrlParams({ issue: issue.id, page: String(item.page_number) });
 	modalProps = { item, issue };
 }

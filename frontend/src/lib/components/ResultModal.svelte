@@ -5,18 +5,18 @@ import { onMount, onDestroy } from 'svelte';
 import { collectionMap } from '../../utils/collections';
 import IssueInformation from './IssueInformation.svelte';
 import { highlightQuery, searchQuery, isFullScreen, updateUrlParams } from '$lib';
-import { getIssues } from '../../utils/api';
+import { getIssues, type Issue, type SearchResult } from '../../utils/api';
 
 // Accept either pre-loaded data (click flow) or just IDs (URL flow)
 let { item = null, issue: issueProp = null, issueId = '', initialPageNumber = 0, initialFullScreen = false }: {
-	item?: PageData | null;
-	issue?: any;
+	item?: PageData | SearchResult | null;
+	issue?: Issue | null;
 	issueId?: string;
 	initialPageNumber?: number;
 	initialFullScreen?: boolean;
 } = $props();
 
-let issue = $state(issueProp);
+let issue: Issue | null = $state(issueProp);
 let fullScreen = $state(initialFullScreen);
 
 $effect(() => {
@@ -114,8 +114,12 @@ onMount(async () => {
 		issue = issues[issueId];
 	}
 
-	if (item) {
-		allPages = { [item.page_number]: item };
+	if (item && item.page_number != null) {
+		allPages = { [item.page_number]: {
+			page_number: item.page_number,
+			image_url: item.image_url ?? '',
+			ocr_result: item.ocr_result ?? ''
+		}};
 	}
 
 	// Capture phase so Escape for fullscreen fires before modal close handler

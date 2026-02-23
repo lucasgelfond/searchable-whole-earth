@@ -1,6 +1,8 @@
 <script lang="ts">
+import type { Issue } from '../../utils/api';
+
 let { issue, collectionMap, currentPageNumber }: {
-	issue: any;
+	issue: Issue;
 	collectionMap: Record<string, string>;
 	currentPageNumber: number;
 } = $props();

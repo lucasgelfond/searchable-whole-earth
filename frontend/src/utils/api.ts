@@ -10,6 +10,21 @@ export interface SearchResult {
 	score: number;
 }
 
+export interface Issue {
+	id: string;
+	filename: string;
+	created_at: string;
+	num_pages: number;
+	issue_url: string;
+	description: string;
+	pdf_download: string;
+	internet_archive: string;
+	collection: string;
+	pub_date: string;
+}
+
+export type IssueMap = Record<string, Issue>;
+
 export async function search(query: string, matchCount = 30): Promise<SearchResult[]> {
 	const response = await fetch(`${API_URL}/search`, {
 		method: "POST",
@@ -26,7 +41,7 @@ export async function search(query: string, matchCount = 30): Promise<SearchResu
 	return response.json();
 }
 
-export async function getIssues(): Promise<Record<string, any>> {
+export async function getIssues(): Promise<IssueMap> {
 	const response = await fetch("/issues.json");
 
 	if (!response.ok) {
@@ -42,11 +57,11 @@ export async function getIssues(): Promise<Record<string, any>> {
 	}
 
 	return issues.reduce(
-		(acc: Record<string, any>, issue: any) => {
+		(acc: IssueMap, issue: Issue) => {
 			acc[issue.id] = issue;
 			return acc;
 		},
-		{} as Record<string, any>
+		{} as IssueMap
 	);
 }
 

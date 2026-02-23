@@ -1,14 +1,16 @@
 <script lang="ts">
+import type { SearchResult as SearchResultType, Issue, IssueMap } from '../../utils/api';
 import SearchResult from './SearchResult.svelte';
 
 let { results = [], issueMap = {}, openModal, query = '' }: {
-	results?: any[];
-	issueMap?: Record<string, any>;
-	openModal: (item: any, issue: any) => void;
+	results?: SearchResultType[];
+	issueMap?: IssueMap;
+	openModal: (item: SearchResultType, issue: Issue) => void;
 	query?: string;
 } = $props();
 
-function showResultModal(item: any) {
+function showResultModal(item: SearchResultType) {
+	if (!item.parent_issue_id) return;
 	const issue = issueMap[item.parent_issue_id];
 	openModal(item, issue);
 }

@@ -1,13 +1,16 @@
 <script lang="ts">
+import type { SearchResult, IssueMap } from '../../utils/api';
 import { collectionMap } from '../../utils/collections';
 import { highlightQuery } from '$lib';
 
 let { item, issueMap = {}, query = '', onselect }: {
-	item: any;
-	issueMap?: Record<string, any>;
+	item: SearchResult;
+	issueMap?: IssueMap;
 	query?: string;
-	onselect: (item: any) => void;
+	onselect: (item: SearchResult) => void;
 } = $props();
+
+let parentIssue = $derived(item.parent_issue_id != null ? issueMap[item.parent_issue_id] : undefined);
 </script>
 
 <button
@@ -28,17 +31,17 @@ let { item, issueMap = {}, query = '', onselect }: {
 
   <!-- Mobile: Combined metadata and content, Desktop: Just metadata -->
   <div class="flex flex-col md:hidden">
-    {#if issueMap[item.parent_issue_id]}
+    {#if parentIssue}
       <div class="text-xs text-black dark:text-white">
-        <div class="text-[10px] text-black/70 dark:text-white/70">{issueMap[item.parent_issue_id].pub_date}</div>
+        <div class="text-[10px] text-black/70 dark:text-white/70">{parentIssue.pub_date}</div>
         <div class="font-bold text-sm">
-          {collectionMap[issueMap[item.parent_issue_id].collection]}
+          {collectionMap[parentIssue.collection]}
         </div>
-        <div>pg <strong>{item.page_number}</strong>/{issueMap[item.parent_issue_id].num_pages}</div>
+        <div>pg <strong>{item.page_number}</strong>/{parentIssue.num_pages}</div>
       </div>
       <div class="flex gap-2 pt-1 text-xs">
         <a
-          href={issueMap[item.parent_issue_id].internet_archive}
+          href={parentIssue.internet_archive}
           class="text-blue-600 dark:text-blue-400 hover:underline"
           target="_blank"
           onclick={(e: MouseEvent) => e.stopPropagation()}
@@ -46,7 +49,7 @@ let { item, issueMap = {}, query = '', onselect }: {
           Archive
         </a>
         <a
-          href={issueMap[item.parent_issue_id].issue_url}
+          href={parentIssue.issue_url}
           class="text-blue-600 dark:text-blue-400 hover:underline"
           target="_blank"
           onclick={(e: MouseEvent) => e.stopPropagation()}
@@ -63,15 +66,15 @@ let { item, issueMap = {}, query = '', onselect }: {
 
   <!-- Desktop only: Metadata column -->
   <div class="hidden md:flex flex-col justify-between h-full">
-    {#if issueMap[item.parent_issue_id]}
+    {#if parentIssue}
       <div>
-        <div class="text-xs text-black/70 dark:text-white/70">{issueMap[item.parent_issue_id].pub_date}</div>
-        <div class="text-xl font-bold text-black dark:text-white pt-1">{collectionMap[issueMap[item.parent_issue_id].collection]}</div>
+        <div class="text-xs text-black/70 dark:text-white/70">{parentIssue.pub_date}</div>
+        <div class="text-xl font-bold text-black dark:text-white pt-1">{collectionMap[parentIssue.collection]}</div>
       </div>
-      <div class="text-sm">pg <strong>{item.page_number}</strong>/{issueMap[item.parent_issue_id].num_pages}</div>
+      <div class="text-sm">pg <strong>{item.page_number}</strong>/{parentIssue.num_pages}</div>
       <div class="flex gap-2 text-sm">
         <a
-          href={issueMap[item.parent_issue_id].internet_archive}
+          href={parentIssue.internet_archive}
           class="text-blue-600 dark:text-blue-400 hover:underline"
           target="_blank"
           onclick={(e: MouseEvent) => e.stopPropagation()}
@@ -79,7 +82,7 @@ let { item, issueMap = {}, query = '', onselect }: {
           Archive
         </a>
         <a
-          href={issueMap[item.parent_issue_id].issue_url}
+          href={parentIssue.issue_url}
           class="text-blue-600 dark:text-blue-400 hover:underline"
           target="_blank"
           onclick={(e: MouseEvent) => e.stopPropagation()}
@@ -87,7 +90,7 @@ let { item, issueMap = {}, query = '', onselect }: {
           Info
         </a>
         <a
-          href={issueMap[item.parent_issue_id].pdf_download}
+          href={parentIssue.pdf_download}
           class="text-blue-600 dark:text-blue-400 hover:underline"
           target="_blank"
           onclick={(e: MouseEvent) => e.stopPropagation()}
